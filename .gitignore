@@ -1,0 +1,13 @@
+# build artifacts
+macos/build/
+windows/payload-versions/*/
+
+# dependencies
+node_modules/
+
+# OS / editor noise
+.DS_Store
+*.log
+
+# release archives (published as GitHub Releases)
+dsh-desktop-profiles-*.zip

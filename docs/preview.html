@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DSH Profile 行 · 可交互预览</title>
+<style>
+  :root {
+    --bg: #f2f3f5;
+    --window: #ffffff;
+    --sidebar: #fbfbfc;
+    --text: #1f2328;
+    --muted: #6b7280;
+    --faint: #9aa1ab;
+    --border: #e5e6ea;
+    --hover: rgba(15, 23, 42, .055);
+    --active: rgba(15, 23, 42, .085);
+    --accent: #4f8cff;
+    --accent-soft: rgba(79, 140, 255, .14);
+    --danger: #e5484d;
+    --primary: #0b1220;
+    --primary-text: #ffffff;
+    --shadow: 0 18px 48px rgba(15, 23, 42, .18);
+    --tint-blue-bg: rgba(79, 140, 255, .16); --tint-blue-fg: #3b6fd4;
+    --tint-orange-bg: rgba(240, 163, 94, .20); --tint-orange-fg: #b9722a;
+    --tint-green-bg: rgba(99, 181, 140, .20); --tint-green-fg: #2f7d59;
+    --tint-purple-bg: rgba(150, 120, 220, .20); --tint-purple-fg: #6b52b8;
+    --tint-pink-bg: rgba(220, 120, 160, .20); --tint-pink-fg: #a84f74;
+    --tint-gray-bg: rgba(120, 128, 140, .16); --tint-gray-fg: #5b6472;
+  }
+  html[data-theme="dark"] {
+    --bg: #141518;
+    --window: #1e1f23;
+    --sidebar: #212227;
+    --text: #e8eaee;
+    --muted: #a1a7b3;
+    --faint: #7b828e;
+    --border: #303239;
+    --hover: rgba(255, 255, 255, .07);
+    --active: rgba(255, 255, 255, .10);
+    --accent: #6f9dff;
+    --accent-soft: rgba(111, 157, 255, .18);
+    --primary: #e8eaee;
+    --primary-text: #141518;
+    --shadow: 0 18px 48px rgba(0, 0, 0, .55);
+    --tint-blue-bg: rgba(111, 157, 255, .22); --tint-blue-fg: #9dbcff;
+    --tint-orange-bg: rgba(240, 163, 94, .22); --tint-orange-fg: #f0b981;
+    --tint-green-bg: rgba(99, 181, 140, .22); --tint-green-fg: #8fd3b2;
+    --tint-purple-bg: rgba(150, 120, 220, .24); --tint-purple-fg: #c3b1f2;
+    --tint-pink-bg: rgba(220, 120, 160, .24); --tint-pink-fg: #f0a9c4;
+    --tint-gray-bg: rgba(160, 168, 180, .20); --tint-gray-fg: #c2c8d2;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 13px/1.45 "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; }
+
+  /* toolbar */
+  .toolbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 12px 20px;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .toolbar .title { font-weight: 600; font-size: 13px; margin-right: 6px; }
+  .toolbar .hint { color: var(--muted); font-size: 12px; margin-left: auto; }
+  .seg { display: flex; padding: 2px; gap: 2px; border-radius: 8px; background: var(--hover); }
+  .seg button { border: 0; background: transparent; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: var(--muted); cursor: pointer; }
+  .seg button.on { background: var(--window); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .tbtn { border: 1px solid var(--border); background: var(--window); border-radius: 7px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+  .tbtn:hover { background: var(--hover); }
+
+  /* stage + window */
+  .stage { padding: 24px 20px 60px; display: flex; justify-content: center; }
+  .win {
+    position: relative;
+    width: 1120px; max-width: 100%;
+    height: 720px;
+    background: var(--window);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, .10);
+    display: flex; flex-direction: column;
+  }
+  html[data-theme="dark"] .win { box-shadow: 0 12px 40px rgba(0,0,0,.45); }
+  .titlebar {
+    height: 34px; flex: none; display: flex; align-items: center; gap: 16px;
+    padding: 0 14px; font-size: 12px; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .titlebar .menus { display: flex; gap: 14px; }
+  .titlebar .winctl { margin-left: auto; display: flex; gap: 14px; letter-spacing: 1px; }
+  .body { flex: 1; display: flex; min-height: 0; }
+
+  /* sidebar */
+  .sidebar {
+    width: 280px; flex: none; background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    transition: width .16s ease;
+    overflow: hidden;
+  }
+  .sidebar.rail { width: 56px; }
+  .brand { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px; gap: 8px; }
+  .brand .mark { display: flex; align-items: center; gap: 6px; font-weight: 700; letter-spacing: .1px; white-space: nowrap; }
+  .brand .mark .word { font-size: 15px; }
+  .brand .badge { font-size: 9px; border: 1px solid currentColor; border-radius: 3px; padding: 0 3px; letter-spacing: .4px; }
+  .brand .collapse { border: 0; background: transparent; color: var(--muted); width: 24px; height: 24px; border-radius: 6px; cursor: pointer; display: grid; place-items: center; }
+  .brand .collapse:hover { background: var(--hover); }
+  .rail .brand { padding: 10px 0 8px; justify-content: center; }
+  .rail .brand .word, .rail .brand .badge, .rail .brand .collapse { display: none; }
+
+  .side-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: 6px; }
+  .side-scroll::-webkit-scrollbar { width: 8px; }
+  .side-scroll::-webkit-scrollbar-thumb { background: var(--hover); border-radius: 8px; }
+
+  .rows { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; }
+  .panel-row { height: 28px; border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 8px; color: var(--text); background: transparent; border: 0; cursor: pointer; text-align: left; }
+  .panel-row:hover { background: var(--hover); }
+  .panel-row svg { flex: none; color: var(--muted); }
+  .rail .rows { padding: 0 8px; align-items: center; }
+  .rail .panel-row { width: 32px; padding: 0; justify-content: center; }
+  .rail .panel-row .label { display: none; }
+
+  .rail .new-session { display: none; }
+
+  .new-session {
+    height: 36px; margin: 2px 12px 6px; border: 1px solid var(--border); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--window); cursor: pointer; font-weight: 500;
+  }
+  .new-session:hover { background: var(--hover); }
+  .new-session svg { color: var(--text); }
+  .new-session .kbd { margin-left: 6px; }
+
+  /* profile row: shared */
+  .profile-slot { margin: 2px 12px 6px; }
+  .rail .profile-slot { margin: 2px auto 6px; }
+  .avatar {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 6px; font-weight: 600; flex: none;
+    background: var(--tint-blue-bg); color: var(--tint-blue-fg);
+  }
+  .tint-orange { background: var(--tint-orange-bg); color: var(--tint-orange-fg); }
+  .tint-green { background: var(--tint-green-bg); color: var(--tint-green-fg); }
+  .tint-purple { background: var(--tint-purple-bg); color: var(--tint-purple-fg); }
+  .tint-pink { background: var(--tint-pink-bg); color: var(--tint-pink-fg); }
+  .tint-gray { background: var(--tint-gray-bg); color: var(--tint-gray-fg); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
+  .dot.fail { background: var(--danger); }
+  .chev { display: inline-flex; color: var(--muted); flex: none; }
+
+  /* A: borderless identity row */
+  .pA { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 6px 0 4px; border-radius: 8px; cursor: pointer; border: 0; background: transparent; width: 100%; text-align: left; }
+  .pA:hover, .pA:focus-visible { background: var(--hover); outline: none; }
+  .pA .avatar { width: 20px; height: 20px; font-size: 11px; }
+  .pA .name { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pA .plus { width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: var(--muted); opacity: 0; flex: none; border: 0; background: transparent; cursor: pointer; }
+  .pA:hover .plus, .pA .plus:focus-visible { opacity: 1; }
+  .pA .plus:hover { background: var(--active); color: var(--text); }
+  .pA .plus:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .divider { height: 1px; margin: 2px 12px 8px; background: var(--border); }
+  .rail .divider { margin: 2px 10px 8px; }
+  .rail .pA { width: 32px; height: 32px; margin: 0 auto; padding: 0; justify-content: center; }
+  .rail .pA .name, .rail .pA .chev, .rail .pA .plus { display: none; }
+
+  /* B: segmented control */
+  .pB { display: flex; align-items: stretch; height: 30px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: transparent; }
+  .pB .main { flex: 1; display: flex; align-items: center; gap: 8px; padding: 0 8px; border: 0; background: transparent; cursor: pointer; min-width: 0; text-align: left; }
+  .pB .main:hover { background: var(--hover); }
+  .pB .avatar { width: 18px; height: 18px; font-size: 10px; }
+  .pB .name { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pB .plus { width: 30px; border: 0; border-left: 1px solid var(--border); background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--muted); }
+  .pB .plus:hover { background: var(--hover); color: var(--text); }
+  .rail .pB { height: 32px; width: 32px; margin: 0 auto; border-radius: 8px; }
+  .rail .pB .main { padding: 0; justify-content: center; }
+  .rail .pB .name, .rail .pB .chev, .rail .pB .plus { display: none; }
+
+  /* C: current implementation */
+  .pCrow { display: flex; align-items: center; gap: 4px; }
+  .pC { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; height: 32px; padding: 0 8px; border: 1px solid color-mix(in srgb, var(--text) 14%, transparent); border-radius: 8px; background: transparent; cursor: pointer; text-align: left; }
+  .pC:hover { background: var(--hover); }
+  .pC .avatar { width: 18px; height: 18px; border-radius: 5px; font-size: 10px; background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); }
+  .pC .name { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pC .chev { font-size: 11px; opacity: .55; }
+  .pCplus { width: 32px; height: 32px; border: 1px solid color-mix(in srgb, var(--text) 14%, transparent); border-radius: 8px; background: transparent; cursor: pointer; font-size: 16px; color: var(--text); display: grid; place-items: center; }
+  .pCplus:hover { background: var(--hover); }
+  .rail .pCrow { justify-content: center; }
+  .rail .pC { width: 32px; padding: 0; justify-content: center; }
+  .rail .pC .name, .rail .pC .chev, .rail .pCplus { display: none; }
+
+  /* workspace section */
+  .section { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 4px; color: var(--muted); font-size: 12px; }
+  .section .tools { display: flex; gap: 4px; }
+  .section .tools button { width: 24px; height: 24px; border: 0; background: transparent; border-radius: 6px; display: grid; place-items: center; color: var(--muted); cursor: pointer; }
+  .section .tools button:hover { background: var(--hover); color: var(--text); }
+  .rail .section { display: none; }
+  .ws-list { padding: 0 12px; display: flex; flex-direction: column; gap: 1px; }
+  .ws-row { height: 30px; border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 8px; color: var(--text); cursor: pointer; }
+  .ws-row:hover { background: var(--hover); }
+  .ws-row.active { background: var(--active); }
+  .ws-row .folder { color: var(--muted); }
+  .rail .ws-list { padding: 0 8px; align-items: center; }
+  .rail .ws-row { width: 32px; padding: 0; justify-content: center; }
+  .rail .ws-row .label { display: none; }
+  .sub { padding: 2px 12px 0 30px; display: flex; flex-direction: column; gap: 1px; }
+  .sub .item { height: 28px; border-radius: 7px; display: flex; align-items: center; padding: 0 8px; color: var(--muted); font-size: 12px; }
+  .sub .item:hover { background: var(--hover); color: var(--text); }
+  .rail .sub { display: none; }
+
+  .side-foot { flex: none; padding: 8px 12px 10px; display: flex; align-items: center; gap: 8px; }
+  .side-foot .me { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; color: var(--text); font-size: 12px; }
+  .side-foot .me .avatar { width: 22px; height: 22px; border-radius: 50%; font-size: 10px; background: var(--tint-pink-bg); color: var(--tint-pink-fg); }
+  .side-foot .gear { width: 28px; height: 28px; border-radius: 8px; border: 0; background: transparent; display: grid; place-items: center; color: var(--muted); cursor: pointer; }
+  .side-foot .gear:hover { background: var(--hover); color: var(--text); }
+  .rail .side-foot { justify-content: center; padding: 8px 0 10px; }
+  .rail .side-foot .me span, .rail .side-foot .gear { display: none; }
+
+  /* main area */
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding: 24px; position: relative; }
+  .hero { display: flex; align-items: center; gap: 12px; font-size: 30px; font-weight: 600; letter-spacing: .2px; }
+  .hero .pill { font-size: 11px; font-weight: 500; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; }
+  .composer { width: 640px; max-width: 100%; border: 1px solid var(--border); border-radius: 14px; background: var(--window); padding: 16px 16px 12px; box-shadow: 0 4px 18px rgba(15,23,42,.05); }
+  .composer .ph { color: var(--faint); font-size: 13px; min-height: 46px; }
+  .composer .bar { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+  .composer .bar .grow { flex: 1; }
+  .composer .send { width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--accent); color: #fff; display: grid; place-items: center; opacity: .55; }
+
+  /* modal */
+  .backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, .28); display: none; align-items: flex-start; justify-content: center; padding-top: 90px; z-index: 20; }
+  .backdrop.open { display: flex; }
+  .modal { width: 360px; max-width: calc(100% - 48px); background: var(--window); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 14px; }
+  .modal .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .modal .head .t { font-size: 14px; font-weight: 600; }
+  .modal .head .s { font-size: 12px; color: var(--muted); margin-left: 8px; font-weight: 400; }
+  .modal .x { width: 24px; height: 24px; border: 0; background: transparent; border-radius: 6px; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
+  .modal .x:hover { background: var(--hover); color: var(--text); }
+  .plist { display: flex; flex-direction: column; gap: 2px; }
+  .pitem { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px; border-radius: 8px; border: 0; background: transparent; cursor: pointer; text-align: left; }
+  .pitem:hover { background: var(--hover); }
+  .pitem.current { background: var(--active); }
+  .pitem .avatar { width: 24px; height: 24px; border-radius: 7px; font-size: 12px; }
+  .pitem .label { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pitem .meta { font-size: 12px; color: var(--muted); }
+  .tag { font-size: 11px; line-height: 1; padding: 3px 6px; border-radius: 999px; background: var(--hover); color: var(--muted); white-space: nowrap; }
+  .tag.run { background: var(--accent-soft); color: var(--accent); }
+  .tag.fail { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+  .pitem .rm { width: 22px; height: 22px; border: 0; background: transparent; border-radius: 6px; color: var(--muted); cursor: pointer; display: none; }
+  .pitem:hover .rm { display: grid; place-items: center; }
+  .pitem .rm:hover { background: var(--active); color: var(--text); }
+  .modal .sep { height: 1px; background: var(--border); margin: 8px 4px; }
+  .newrow { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 8px; border-radius: 8px; border: 0; background: transparent; width: 100%; cursor: pointer; text-align: left; color: var(--text); }
+  .newrow:hover { background: var(--hover); }
+  .newrow .plusbox { width: 24px; height: 24px; border-radius: 7px; border: 1px dashed var(--border); display: grid; place-items: center; color: var(--muted); }
+  .form { display: flex; flex-direction: column; gap: 8px; padding: 2px 2px 0; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .field input[type="text"] { width: 100%; height: 32px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--window); color: var(--text); font: inherit; outline: none; }
+  .field input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .field .error { color: var(--danger); font-size: 11px; margin-top: 4px; display: none; }
+  .checks { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text); }
+  .checks label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  .btn { height: 30px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--window); cursor: pointer; }
+  .btn:hover { background: var(--hover); }
+  .btn.primary { background: var(--primary); color: var(--primary-text); border-color: transparent; }
+  .modal .foot { margin-top: 8px; font-size: 11px; color: var(--faint); display: flex; gap: 6px; align-items: center; }
+  .kbd { font: 11px/1.4 ui-monospace, Consolas, monospace; padding: 1px 5px; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); }
+
+  .toast { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--primary); color: var(--primary-text); padding: 7px 14px; border-radius: 8px; font-size: 12px; opacity: 0; pointer-events: none; transition: opacity .18s ease; z-index: 25; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <span class="title">DSH Profile 行 · 可交互预览</span>
+    <div class="seg" id="variantSeg">
+      <button data-variant="A" class="on">方案 A（推荐）</button>
+      <button data-variant="B">方案 B</button>
+      <button data-variant="C">现状</button>
+    </div>
+    <button class="tbtn" id="railBtn">折叠侧边栏</button>
+    <button class="tbtn" id="themeBtn">深色模式</button>
+    <span class="hint">试试：悬停 profile 行 → 点 ＋ / 点整行 → 弹窗里切换 / 新建 / 悬停删除 / Esc 关闭</span>
+  </div>
+
+  <div class="stage">
+    <div class="win">
+      <div class="titlebar">
+        <div class="menus"><span>应用</span><span>编辑</span></div>
+        <div class="winctl"><span>—</span><span>▢</span><span>✕</span></div>
+      </div>
+      <div class="body">
+        <aside class="sidebar" id="sidebar">
+          <div class="brand">
+            <span class="mark">
+              <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.8 9.2C4 5 7.2 3 11.6 3.2c-.4 4.1-2.3 7-5.7 8.2-1.2.4-2.6-.2-4.1-2.2Z" fill="currentColor"/><circle cx="10.4" cy="5.6" r=".9" fill="var(--sidebar)"/></svg>
+              <span class="word">deepseek</span><span class="badge">HARNESS</span>
+            </span>
+            <button class="collapse" id="collapseBtn" title="折叠侧边栏">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M6.5 2.5v11"/></svg>
+            </button>
+          </div>
+
+          <div class="side-scroll">
+            <div class="profile-slot" id="profileSlot"></div>
+            <div class="divider" id="divider"></div>
+            <div class="new-session">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3.2v9.6M3.2 8h9.6"/></svg>
+              <span>新会话</span><span class="kbd">Ctrl N</span>
+            </div>
+            <div class="rows">
+              <button class="panel-row"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="5.6"/><path d="M8 2.4v11.2M2.4 8h11.2"/></svg><span class="label">插件</span></button>
+              <button class="panel-row"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.4" y="3" width="11.2" height="10" rx="2"/><path d="M2.4 6h11.2M5.5 3V1.8M10.5 3V1.8"/></svg><span class="label">自动化任务</span></button>
+              <button class="panel-row"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.4" y="2.4" width="4.6" height="4.6" rx="1.2"/><rect x="9" y="2.4" width="4.6" height="4.6" rx="1.2"/><rect x="2.4" y="9" width="4.6" height="4.6" rx="1.2"/><path d="M11.3 9v4.6M9 11.3h4.6"/></svg><span class="label">更多</span></button>
+            </div>
+
+            <div class="section"><span>工作区</span><span class="tools">
+              <button title="搜索"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.4"/><path d="m10.4 10.4 3 3"/></svg></button>
+              <button title="刷新"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 8a5 5 0 1 1-1.6-3.7"/><path d="M13 2.6V5h-2.4"/></svg></button>
+              <button title="新建工作区"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.6 4.2h4l1.2 1.6h5.6v6.4a1 1 0 0 1-1 1H3.6a1 1 0 0 1-1-1V4.2Z"/><path d="M8 8.4v3.2M6.4 10h3.2"/></svg></button>
+            </span></div>
+            <div class="ws-list">
+              <div class="ws-row active"><svg class="folder" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2.6 4.2h4l1.2 1.6h5.6v6.4a1 1 0 0 1-1 1H3.6a1 1 0 0 1-1-1V4.2Z"/></svg><span class="label">默认工作区</span></div>
+              <div class="ws-row"><svg class="folder" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2.6 4.2h4l1.2 1.6h5.6v6.4a1 1 0 0 1-1 1H3.6a1 1 0 0 1-1-1V4.2Z"/></svg><span class="label">deepseek-harness</span></div>
+            </div>
+            <div class="sub">
+              <div class="item">新会话</div>
+              <div class="item">未分组</div>
+            </div>
+          </div>
+
+          <div class="side-foot">
+            <div class="me"><span class="avatar">寒</span><span>大寒</span></div>
+            <button class="gear" title="设置"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v1.4M8 12.8v1.4M1.8 8h1.4M12.8 8h1.4M3.6 3.6l1 1M11.4 11.4l1 1M12.4 3.6l-1 1M4.6 11.4l-1 1"/></svg></button>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="hero">
+            <svg width="34" height="34" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.8 9.2C4 5 7.2 3 11.6 3.2c-.4 4.1-2.3 7-5.7 8.2-1.2.4-2.6-.2-4.1-2.2Z" fill="currentColor"/><circle cx="10.4" cy="5.6" r=".9" fill="var(--window)"/></svg>
+            <span>探索未至之境</span><span class="pill">预览版</span>
+          </div>
+          <div class="composer">
+            <div class="ph">描述你想要构建的内容，/ 调用指令，@ 文件或对话</div>
+            <div class="bar">
+              <span>＋</span><span>工作区内修改</span><span class="grow"></span><span>DeepSeek-V4.1-Flash High</span><span>🎙</span>
+              <button class="send" aria-label="发送">↑</button>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <div class="backdrop" id="backdrop">
+        <div class="modal" id="modal" role="dialog" aria-label="切换 Profile">
+          <div class="head">
+            <div><span class="t">切换 Profile</span><span class="s">独立会话与登录</span></div>
+            <button class="x" id="closeBtn" title="关闭">✕</button>
+          </div>
+          <div class="plist" id="plist"></div>
+          <div class="sep"></div>
+          <button class="newrow" id="newBtn"><span class="plusbox">＋</span><span>新建 Profile</span></button>
+          <div id="formHost"></div>
+          <div class="foot"><span class="kbd">↑</span><span class="kbd">↓</span> 选择 <span class="kbd">Enter</span> 切换 <span class="kbd">Esc</span> 关闭</div>
+        </div>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+<script>
+  const tints = ['', 'tint-orange', 'tint-green', 'tint-purple', 'tint-pink', 'tint-gray'];
+  const state = {
+    variant: 'A',
+    rail: false,
+    profiles: [
+      { name: 'desktop', label: '默认', tint: '', running: false, sessions: null, current: true },
+      { name: 'work', label: '工作', tint: 'tint-orange', running: true, sessions: 3, current: false },
+      { name: 'research', label: 'research', tint: 'tint-green', running: false, sessions: 2, current: false }
+    ],
+    formOpen: false,
+    error: ''
+  };
+  const $ = (id) => document.getElementById(id);
+  const current = () => state.profiles.find((p) => p.current) || state.profiles[0];
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function avatar(profile, size) {
+    const initial = profile.name === 'desktop' ? '默' : (profile.label || profile.name).trim().slice(0, 1).toUpperCase();
+    const cls = profile.tint || '';
+    const style = size === 'large' ? 'width:24px;height:24px;border-radius:7px;font-size:12px' : size === 'small' ? 'width:18px;height:18px;border-radius:5px;font-size:10px' : '';
+    return `<span class="avatar ${cls}" style="${style}">${escapeHtml(initial)}</span>`;
+  }
+
+  function profileRow() {
+    const p = current();
+    const dot = p.running ? '<span class="dot" title="运行中"></span>' : '';
+    if (state.variant === 'B') {
+      return `<div class="pB">
+        <button class="main" data-open><span class="avatar ${p.tint}" style="width:18px;height:18px;border-radius:5px;font-size:10px">${escapeHtml(p.label.slice(0,1))}</span><span class="name">${escapeHtml(p.label)}</span><span class="chev"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6.5 8 10.5 12 6.5"/></svg></span></button>
+        <button class="plus" data-new title="新建 Profile"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button>
+      </div>`;
+    }
+    if (state.variant === 'C') {
+      return `<div class="pCrow">
+        <button class="pC" data-open><span class="avatar">${escapeHtml(p.label.slice(0,1))}</span><span class="name">${escapeHtml(p.label)}</span><span class="chev">⌄</span></button>
+        <button class="pCplus" data-new title="新建 Profile">+</button>
+      </div>`;
+    }
+    return `<button class="pA" data-open title="切换 Profile">
+      ${avatar(p, 'small')}
+      <span class="name">${escapeHtml(p.label)}</span>
+      ${dot}
+      <span class="chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6.5 8 10.5 12 6.5"/></svg></span>
+      <span class="plus" data-new title="新建 Profile" role="button" tabindex="0"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></span>
+    </button>`;
+  }
+
+  function renderShell() {
+    $('profileSlot').innerHTML = profileRow();
+    $('divider').style.display = state.variant === 'A' ? '' : 'none';
+    $('sidebar').classList.toggle('rail', state.rail);
+    $('railBtn').textContent = state.rail ? '展开侧边栏' : '折叠侧边栏';
+    document.querySelectorAll('#variantSeg button').forEach((b) => b.classList.toggle('on', b.dataset.variant === state.variant));
+    const slot = $('profileSlot');
+    if (state.rail) {
+      const btn = slot.querySelector('[data-open]');
+      if (btn) btn.title = current().label;
+    }
+    slot.querySelectorAll('[data-new]').forEach((el) => {
+      el.addEventListener('click', (event) => { event.stopPropagation(); openModal(true); });
+    });
+    slot.querySelectorAll('[data-open]').forEach((el) => {
+      el.addEventListener('click', () => openModal(false));
+    });
+  }
+
+  function renderModal() {
+    if (!$('backdrop').classList.contains('open')) return;
+    $('plist').innerHTML = state.profiles.map((p, index) => `
+      <button class="pitem ${p.current ? 'current' : ''}" data-index="${index}">
+        ${avatar(p, 'large')}
+        <span class="label">${escapeHtml(p.label)}</span>
+        ${p.current ? '<span class="tag">当前</span>' : ''}
+        ${p.running ? '<span class="tag run">运行中</span>' : ''}
+        ${!p.current && p.sessions !== null ? `<span class="meta">${p.sessions} 会话</span>` : ''}
+        ${!p.current && p.name !== 'desktop' ? '<span class="rm" data-remove role="button" title="删除">✕</span>' : ''}
+      </button>`).join('');
+    $('plist').querySelectorAll('[data-index]').forEach((el) => {
+      el.addEventListener('click', (event) => {
+        if (event.target.closest('[data-remove]')) {
+          const index = Number(el.dataset.index);
+          state.profiles.splice(index, 1);
+          renderShell();
+          renderModal();
+          toast('已移入 .trash（可恢复）');
+          return;
+        }
+        const index = Number(el.dataset.index);
+        state.profiles.forEach((p, i) => { p.current = i === index; });
+        renderShell();
+        closeModal();
+        toast(`已切换到「${state.profiles[index].label}」`);
+      });
+    });
+    if (state.formOpen) {
+      $('formHost').innerHTML = `
+        <div class="form">
+          <div class="field"><label>名称（小写字母、数字、短横线）</label><input id="fName" type="text" placeholder="work" autocomplete="off" /><div class="error" id="fError">${escapeHtml(state.error)}</div></div>
+          <div class="field"><label>显示名</label><input id="fLabel" type="text" placeholder="工作" autocomplete="off" /></div>
+          <div class="checks">
+            <label><input id="fCred" type="checkbox" checked /> 复制当前登录凭据</label>
+            <label><input id="fModel" type="checkbox" checked /> 沿用当前模型设置</label>
+          </div>
+          <div class="actions"><button class="btn" id="fCancel">取消</button><button class="btn primary" id="fCreate">创建并切换</button></div>
+        </div>`;
+      $('fName').focus();
+      $('fCancel').addEventListener('click', () => { state.formOpen = false; state.error = ''; renderModal(); });
+      $('fCreate').addEventListener('click', submitForm);
+      $('fName').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitForm(); });
+      $('fLabel').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitForm(); });
+    } else {
+      $('formHost').innerHTML = '';
+    }
+    if (state.error && $('fError')) $('fError').style.display = 'block';
+  }
+
+  function submitForm() {
+    const name = $('fName').value.trim().toLowerCase();
+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(name)) { state.error = '名称只能用小写字母、数字和短横线'; renderModal(); return; }
+    if (state.profiles.some((p) => p.name === name)) { state.error = '该名称已存在'; renderModal(); return; }
+    const label = $('fLabel').value.trim() || name;
+    state.profiles.forEach((p) => { p.current = false; });
+    state.profiles.push({ name, label, tint: tints[(state.profiles.length) % tints.length], running: false, sessions: 0, current: true });
+    state.formOpen = false; state.error = '';
+    renderShell(); closeModal();
+    toast(`已创建并切换到「${label}」`);
+  }
+
+  function openModal(form) {
+    state.formOpen = Boolean(form);
+    state.error = '';
+    $('backdrop').classList.add('open');
+    renderModal();
+  }
+  function closeModal() {
+    $('backdrop').classList.remove('open');
+    state.formOpen = false; state.error = '';
+  }
+  function toast(message) {
+    const el = $('toast');
+    el.textContent = message; el.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => el.classList.remove('show'), 1600);
+  }
+
+  $('variantSeg').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-variant]');
+    if (!button) return;
+    state.variant = button.dataset.variant;
+    renderShell();
+  });
+  $('railBtn').addEventListener('click', () => { state.rail = !state.rail; renderShell(); });
+  $('themeBtn').addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    $('themeBtn').textContent = next === 'dark' ? '浅色模式' : '深色模式';
+  });
+  $('collapseBtn').addEventListener('click', () => { state.rail = !state.rail; renderShell(); });
+  $('closeBtn').addEventListener('click', closeModal);
+  $('newBtn').addEventListener('click', () => { state.formOpen = true; state.error = ''; renderModal(); });
+  $('backdrop').addEventListener('click', (event) => { if (event.target === $('backdrop')) closeModal(); });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeModal();
+  });
+
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.dataset.theme = 'dark';
+    $('themeBtn').textContent = '浅色模式';
+  }
+  renderShell();
+</script>
+</body>
+</html>

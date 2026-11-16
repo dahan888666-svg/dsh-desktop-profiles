@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Profile 行样式方案对比</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0;
+    padding: 28px;
+    background: Canvas;
+    color: CanvasText;
+    font: 13px/1.45 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  p.lead { margin: 0 0 22px; color: color-mix(in srgb, CanvasText 60%, transparent); font-size: 12px; }
+  .grid { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }
+  .col { width: 300px; }
+  .col h2 { font-size: 13px; margin: 0 0 2px; }
+  .col .note { font-size: 12px; color: color-mix(in srgb, CanvasText 55%, transparent); margin: 0 0 10px; min-height: 34px; }
+  .phone { width: 280px; background: color-mix(in srgb, CanvasText 3%, Canvas); border: 1px solid color-mix(in srgb, CanvasText 8%, transparent); border-radius: 12px; overflow: hidden; }
+  .side { padding: 10px 0 12px; display: flex; flex-direction: column; gap: 6px; min-height: 430px; }
+  .brand { display: flex; align-items: center; justify-content: space-between; padding: 2px 12px 8px; }
+  .brand .mark { display: flex; align-items: center; gap: 6px; font-weight: 700; letter-spacing: .2px; }
+  .brand .mark span { font-size: 14px; }
+  .brand .right { display: flex; gap: 8px; color: color-mix(in srgb, CanvasText 50%, transparent); }
+  .brand svg { display: block; }
+  .rows { padding: 0 var(--pad, 12px); display: flex; flex-direction: column; gap: 2px; }
+  .row-item { height: 28px; border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 8px; color: color-mix(in srgb, CanvasText 82%, transparent); }
+  .row-item svg { opacity: .7; }
+  .primary-new { height: 34px; margin: 4px 12px 6px; border-radius: 10px; border: 1px solid color-mix(in srgb, CanvasText 14%, transparent); display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500; }
+  .section { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 2px; font-size: 12px; color: color-mix(in srgb, CanvasText 55%, transparent); }
+  .section .tools { display: flex; gap: 10px; }
+  .ws { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin: 0 12px; border-radius: 8px; background: color-mix(in srgb, CanvasText 6%, transparent); }
+  .ws .dot { width: 14px; height: 14px; border-radius: 4px; background: color-mix(in srgb, CanvasText 12%, transparent); }
+  .spacer { flex: 1; }
+  .foot { display: flex; align-items: center; gap: 8px; padding: 8px 12px 0; font-size: 12px; color: color-mix(in srgb, CanvasText 70%, transparent); }
+
+  /* ---------- 现状 ---------- */
+  .now-row { display: flex; align-items: center; gap: 4px; margin: 0 12px 6px; min-height: 32px; }
+  .now-current { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; height: 32px; padding: 0 8px; border: 1px solid color-mix(in srgb, CanvasText 14%, transparent); border-radius: 8px; }
+  .now-square { width: 18px; height: 18px; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; background: color-mix(in srgb, CanvasText 10%, transparent); }
+  .now-name { flex: 1; font-size: 13px; }
+  .now-chev { opacity: .5; font-size: 11px; }
+  .now-plus { width: 32px; height: 32px; border: 1px solid color-mix(in srgb, CanvasText 14%, transparent); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+
+  /* ---------- 方案 A ---------- */
+  .a-row { display: flex; align-items: center; gap: 6px; height: 30px; margin: 2px 12px 6px; padding: 0 6px 0 4px; border-radius: 8px; }
+  .a-row:hover { background: color-mix(in srgb, CanvasText 7%, transparent); }
+  .a-avatar { width: 20px; height: 20px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; background: color-mix(in srgb, #5b8def 18%, transparent); color: #3b6fd4; }
+  .a-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .a-dot { width: 6px; height: 6px; border-radius: 50%; background: #4f8cff; }
+  .a-chev { color: color-mix(in srgb, CanvasText 50%, transparent); display: flex; }
+  .a-plus { width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: color-mix(in srgb, CanvasText 55%, transparent); opacity: 0; }
+  .a-row:hover .a-plus, .a-plus:focus-visible { opacity: 1; background: color-mix(in srgb, CanvasText 9%, transparent); }
+  .a-divider { height: 1px; margin: 2px 12px 8px; background: color-mix(in srgb, CanvasText 8%, transparent); }
+
+  /* ---------- 方案 B ---------- */
+  .b-group { display: flex; align-items: stretch; height: 30px; margin: 2px 12px 6px; border: 1px solid color-mix(in srgb, CanvasText 11%, transparent); border-radius: 8px; overflow: hidden; }
+  .b-main { flex: 1; display: flex; align-items: center; gap: 8px; padding: 0 8px; min-width: 0; }
+  .b-avatar { width: 18px; height: 18px; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; background: color-mix(in srgb, CanvasText 9%, transparent); }
+  .b-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .b-chev { color: color-mix(in srgb, CanvasText 45%, transparent); display: flex; padding-right: 2px; }
+  .b-plus { width: 30px; display: inline-flex; align-items: center; justify-content: center; border-left: 1px solid color-mix(in srgb, CanvasText 11%, transparent); color: color-mix(in srgb, CanvasText 60%, transparent); }
+  .b-plus:hover { background: color-mix(in srgb, CanvasText 6%, transparent); }
+
+  /* ---------- 方案 C ---------- */
+  .c-brand { display: flex; align-items: center; justify-content: space-between; padding: 2px 12px 8px; gap: 8px; }
+  .c-brand .mark { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+  .c-chip { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 6px; border-radius: 7px; background: color-mix(in srgb, CanvasText 6%, transparent); font-size: 12px; }
+  .c-chip .a-avatar { width: 18px; height: 18px; font-size: 10px; }
+
+  /* ---------- modal preview ---------- */
+  .modal-wrap { margin-top: 14px; width: 340px; }
+  .modal-wrap h3 { font-size: 12px; margin: 0 0 8px; color: color-mix(in srgb, CanvasText 55%, transparent); font-weight: 500; }
+  .modal { border: 1px solid color-mix(in srgb, CanvasText 14%, transparent); border-radius: 12px; background: Canvas; box-shadow: 0 18px 48px rgba(0,0,0,.18); padding: 14px; font-size: 13px; }
+  .modal .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-weight: 600; font-size: 14px; }
+  .modal .head small { font-weight: 400; font-size: 12px; color: color-mix(in srgb, CanvasText 50%, transparent); margin-left: 8px; }
+  .modal .item { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px; border-radius: 8px; }
+  .modal .item:hover { background: color-mix(in srgb, CanvasText 6%, transparent); }
+  .modal .item.active { background: color-mix(in srgb, CanvasText 8%, transparent); }
+  .modal .item .a-avatar { width: 24px; height: 24px; border-radius: 7px; font-size: 12px; }
+  .modal .item .label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge { font-size: 11px; line-height: 1; padding: 3px 6px; border-radius: 999px; background: color-mix(in srgb, CanvasText 8%, transparent); color: color-mix(in srgb, CanvasText 60%, transparent); }
+  .badge.run { background: color-mix(in srgb, #4f8cff 16%, transparent); color: #3b6fd4; }
+  .modal .divider { height: 1px; background: color-mix(in srgb, CanvasText 9%, transparent); margin: 8px 4px; }
+  .modal .new { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 8px; border-radius: 8px; color: color-mix(in srgb, CanvasText 70%, transparent); }
+  .modal .new:hover { background: color-mix(in srgb, CanvasText 6%, transparent); }
+  .modal .foot { margin-top: 6px; font-size: 11px; color: color-mix(in srgb, CanvasText 45%, transparent); }
+  .kbd { font: 11px/1.4 ui-monospace, Consolas, monospace; padding: 1px 5px; border: 1px solid color-mix(in srgb, CanvasText 16%, transparent); border-radius: 5px; }
+</style>
+</head>
+<body>
+<h1>侧边栏 Profile 行：样式方案对比</h1>
+<p class="lead">同一个 280px 侧边栏里的四种呈现。悬停可见交互差异；“当前/运行中”标签在弹窗里展示。</p>
+
+<div class="grid">
+  <!-- 现状 -->
+  <div class="col">
+    <h2>现状</h2>
+    <p class="note">两个描边控件等重，和侧边栏“无边框行 + 一个主操作”的语言冲突；`⌄` 用文字字形，基线不稳。</p>
+    <div class="phone"><div class="side">
+      <div class="brand"><div class="mark"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 9c2-4 5-6 9-6-1 4-3 7-6 8-1 .4-2 0-3-2z" fill="currentColor"/></svg><span>deepseek</span><span style="font-size:10px;border:1px solid currentColor;padding:0 3px;border-radius:2px">HARNESS</span></div><div class="right">▥</div></div>
+      <div class="now-row">
+        <div class="now-current"><span class="now-square">默</span><span class="now-name">默认</span><span class="now-chev">⌄</span></div>
+        <div class="now-plus">+</div>
+      </div>
+      <div class="primary-new"><span>＋</span><span>新会话</span></div>
+      <div class="rows">
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor"/></svg>插件</div>
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="2" fill="none" stroke="currentColor"/></svg>自动化任务</div>
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" fill="none" stroke="currentColor"/><rect x="9" y="2" width="5" height="5" fill="none" stroke="currentColor"/><rect x="2" y="9" width="5" height="5" fill="none" stroke="currentColor"/></svg>更多</div>
+      </div>
+      <div class="section"><span>工作区</span><span class="tools">⌕ ⟳ ＋</span></div>
+      <div class="ws"><span class="dot"></span><span>默认工作区</span></div>
+      <div class="spacer"></div>
+      <div class="foot">⚙ 设置</div>
+    </div></div>
+  </div>
+
+  <!-- 方案 A -->
+  <div class="col">
+    <h2>方案 A（推荐）无边框身份行</h2>
+    <p class="note">去掉描边，和插件/工作区行同构；头像给身份感；`+` 低强度、悬停显现；下方细分隔线把“身份”和“动作”分开。（下图已模拟悬停态）</p>
+    <div class="phone"><div class="side">
+      <div class="brand"><div class="mark"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 9c2-4 5-6 9-6-1 4-3 7-6 8-1 .4-2 0-3-2z" fill="currentColor"/></svg><span>deepseek</span><span style="font-size:10px;border:1px solid currentColor;padding:0 3px;border-radius:2px">HARNESS</span></div><div class="right">▥</div></div>
+      <div class="a-row">
+        <span class="a-avatar">默</span><span class="a-name">默认</span>
+        <span class="a-dot"></span>
+        <span class="a-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6.5 8 10.5 12 6.5"/></svg></span>
+        <span class="a-plus"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></span>
+      </div>
+      <div class="a-divider"></div>
+      <div class="primary-new"><span>＋</span><span>新会话</span></div>
+      <div class="rows">
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor"/></svg>插件</div>
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="2" fill="none" stroke="currentColor"/></svg>自动化任务</div>
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" fill="none" stroke="currentColor"/><rect x="9" y="2" width="5" height="5" fill="none" stroke="currentColor"/><rect x="2" y="9" width="5" height="5" fill="none" stroke="currentColor"/></svg>更多</div>
+      </div>
+      <div class="section"><span>工作区</span><span class="tools">⌕ ⟳ ＋</span></div>
+      <div class="ws"><span class="dot"></span><span>默认工作区</span></div>
+      <div class="spacer"></div>
+      <div class="foot">⚙ 设置</div>
+    </div></div>
+  </div>
+
+  <!-- 方案 B -->
+  <div class="col">
+    <h2>方案 B 单段式组合控件</h2>
+    <p class="note">保留“控件”观感：一个外框内分两段（选择 / 新建），减少一个独立描边盒。比现状干净，但仍比侧边栏其他行重。</p>
+    <div class="phone"><div class="side">
+      <div class="brand"><div class="mark"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 9c2-4 5-6 9-6-1 4-3 7-6 8-1 .4-2 0-3-2z" fill="currentColor"/></svg><span>deepseek</span><span style="font-size:10px;border:1px solid currentColor;padding:0 3px;border-radius:2px">HARNESS</span></div><div class="right">▥</div></div>
+      <div class="b-group">
+        <div class="b-main"><span class="b-avatar">默</span><span class="b-name">默认</span><span class="b-chev"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6.5 8 10.5 12 6.5"/></svg></span></div>
+        <div class="b-plus"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></div>
+      </div>
+      <div class="primary-new"><span>＋</span><span>新会话</span></div>
+      <div class="rows">
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor"/></svg>插件</div>
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="2" fill="none" stroke="currentColor"/></svg>自动化任务</div>
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" fill="none" stroke="currentColor"/><rect x="9" y="2" width="5" height="5" fill="none" stroke="currentColor"/><rect x="2" y="9" width="5" height="5" fill="none" stroke="currentColor"/></svg>更多</div>
+      </div>
+      <div class="section"><span>工作区</span><span class="tools">⌕ ⟳ ＋</span></div>
+      <div class="ws"><span class="dot"></span><span>默认工作区</span></div>
+      <div class="spacer"></div>
+      <div class="foot">⚙ 设置</div>
+    </div></div>
+  </div>
+
+  <!-- 方案 C -->
+  <div class="col">
+    <h2>方案 C 并入品牌行</h2>
+    <p class="note">最省空间：品牌行右侧一个 profile chip。代价是品牌行变挤、折叠态无法表达、发现性差。</p>
+    <div class="phone"><div class="side">
+      <div class="c-brand"><div class="mark"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 9c2-4 5-6 9-6-1 4-3 7-6 8-1 .4-2 0-3-2z" fill="currentColor"/></svg><span>deepseek</span></div><div style="display:flex;gap:6px;align-items:center"><div class="c-chip"><span class="a-avatar">默</span><span>默认</span><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6.5 8 10.5 12 6.5"/></svg></div><span style="color:color-mix(in srgb,CanvasText 50%,transparent)">▥</span></div></div>
+      <div style="height:6px"></div>
+      <div class="primary-new"><span>＋</span><span>新会话</span></div>
+      <div class="rows">
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor"/></svg>插件</div>
+        <div class="row-item"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="2" fill="none" stroke="currentColor"/></svg>自动化任务</div>
+      </div>
+      <div class="section"><span>工作区</span><span class="tools">⌕ ⟳ ＋</span></div>
+      <div class="ws"><span class="dot"></span><span>默认工作区</span></div>
+      <div class="spacer"></div>
+      <div class="foot">⚙ 设置</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="modal-wrap">
+  <h3>方案 A 配套的切换弹窗（精修后）</h3>
+  <div class="modal">
+    <div class="head"><span>切换 Profile<small>独立会话与登录</small></span><span style="color:color-mix(in srgb,CanvasText 45%,transparent)">✕</span></div>
+    <div class="item active"><span class="a-avatar">默</span><span class="label">默认</span><span class="badge">当前</span></div>
+    <div class="item"><span class="a-avatar" style="background:color-mix(in srgb,#f0a35e 20%,transparent);color:#b9722a">工</span><span class="label">工作</span><span class="badge run">运行中</span></div>
+    <div class="item"><span class="a-avatar" style="background:color-mix(in srgb,#63b58c 20%,transparent);color:#2f7d59">研</span><span class="label">research</span><span class="badge">2 会话</span></div>
+    <div class="divider"></div>
+    <div class="new"><span style="font-size:16px;line-height:1">＋</span><span>新建 Profile</span></div>
+    <div class="foot">↑↓ 选择 · <span class="kbd">Enter</span> 切换 · <span class="kbd">Esc</span> 关闭</div>
+  </div>
+</div>
+
+</body>
+</html>
