@@ -40,7 +40,7 @@ DSH 桌面端默认只有一个数据目录：会话、账号、插件、模型�
 
 ### 方式一：下载 Release（推荐）
 
-到 Releases 下载 `dsh-desktop-profiles-<version>-all.zip` 并解压（Windows / macOS 共用同一个包）。
+到 [Releases](https://github.com/dahan888666-svg/dsh-desktop-profiles/releases) 下载 `dsh-desktop-profiles-<version>-all.zip` 并解压（Windows / macOS 共用同一个包）。更细的步骤见 [INSTALL.md](INSTALL.md)。
 
 #### Windows
 
