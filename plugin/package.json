@@ -1,6 +1,6 @@
 {
     "name": "dsh-desktop-profiles",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "description": "Desktop Profiles for DeepSeek Harness: per-profile data isolation and in-window switching",
     "icon": "./icon.svg",
     "type": "module",

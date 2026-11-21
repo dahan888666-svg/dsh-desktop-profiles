@@ -43,14 +43,24 @@ del "%TEMP%\dsh-profiles-write-test.bin" >nul 2>&1
 set "NODE=%INSTALL%\resources\runtime\primary-runtime\dependencies\node\bin\node.exe"
 if not exist "%NODE%" set "NODE=node"
 
-"%NODE%" "%HERE%installer\deploy.mjs" "%INSTALL%" --payload "%HERE%payload"
+"%NODE%" "%HERE%installer\repair.mjs" "%INSTALL%" --toolchain "%HERE%.."
 if errorlevel 1 (
   echo.
   echo [!] Install failed. The original archive was kept; nothing was left half-written.
   echo     If it reports access denied, run this file as administrator.
+  echo     Details: %LOCALAPPDATA%\dsh-desktop-profiles\repair.log
   if not defined DSH_PROFILES_NO_PAUSE pause
   exit /b 1
 )
+
+rem Keep a self-contained toolchain so background repair can rebuild the
+rem patch from whatever app.asar a future DSH update installs.
+set "TOOLROOT=%LOCALAPPDATA%\dsh-desktop-profiles"
+if exist "%TOOLROOT%\toolchain" rmdir /s /q "%TOOLROOT%\toolchain"
+mkdir "%TOOLROOT%\toolchain" 2>nul
+xcopy "%HERE%..\macos" "%TOOLROOT%\toolchain\macos" /E /I /Q /Y >nul
+xcopy "%HERE%" "%TOOLROOT%\toolchain\windows" /E /I /Q /Y >nul
+powershell -NoProfile -ExecutionPolicy Bypass -File "%HERE%installer\set-repair-watcher.ps1" -Toolchain "%TOOLROOT%\toolchain" -Install "%INSTALL%"
 
 rem Route the usual shortcuts through the self-healing launcher.
 powershell -NoProfile -ExecutionPolicy Bypass -File "%HERE%installer\set-shortcuts.ps1" "%INSTALL%" "%HERE%Launch.cmd"

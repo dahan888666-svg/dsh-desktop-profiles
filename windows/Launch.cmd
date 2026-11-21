@@ -19,7 +19,7 @@ if "%RUNNING%"=="1" goto start
 
 set "NODE=%INSTALL%\resources\runtime\primary-runtime\dependencies\node\bin\node.exe"
 if not exist "%NODE%" set "NODE=node"
-"%NODE%" "%HERE%installer\patch-check.mjs" "%INSTALL%" --payload "%HERE%payload" --quiet
+"%NODE%" "%HERE%installer\repair.mjs" "%INSTALL%" --toolchain "%HERE%.." --quiet
 
 :start
 start "" "%INSTALL%\DeepSeek Harness.exe"

@@ -1,6 +1,6 @@
 # DSH Desktop Profiles 安装说明书
 
-> 版本：0.1.3 ｜ 适用于 DeepSeek Harness 桌面端 **0.2.2-rc.3**
+> 版本：0.1.4 ｜ 适用于 DeepSeek Harness 桌面端 **0.2.2-rc.5**（rc.3 亦可）
 > 给 DSH 桌面端增加“多 Profile”：每个 Profile 独立会话、账号凭据、插件与设置；侧边栏一键新建/切换；切换不打断其它 Profile 正在运行的任务。
 
 ---
@@ -46,8 +46,9 @@ Install-Windows.cmd "D:\DSH"
 
 - 只关闭**该安装目录**的进程（不会影响另一份 DSH）；
 - 备份官方 `resources\app.asar` → `app.asar.stock`；
-- 用官方备份重建补丁并替换 `app.asar`（校验 `lib/main.js` 哈希）；
-- 把桌面/开始菜单里指向该程序的快捷方式改为指向 `Launch.cmd`（自愈启动器）；
+- **用当前安装目录里的 `app.asar` 现场构建补丁**并替换（不再依赖预构建 payload，新 DSH 小版本可直接适配）；
+- 把工具链复制到 `%LOCALAPPDATA%\dsh-desktop-profiles\toolchain`，并在启动文件夹安装后台自动修复 watcher（60 秒检查一次）；
+- 把桌面/开始菜单里指向该程序的快捷方式改为指向 `Launch.cmd`（启动前自愈）；
 - 重启应用。
 
 > 如果提示 access denied：右键 `Install-Windows.cmd` → 以管理员身份运行。
@@ -59,7 +60,7 @@ Install-Windows.cmd "D:\DSH"
 1. 解压后打开“终端”，进入解压目录：
 
 ```bash
-cd ~/Downloads/dsh-desktop-profiles-0.1.3-all
+cd ~/Downloads/dsh-desktop-profiles-0.1.4-all
 chmod +x *.command macos/*.command
 ```
 
@@ -80,7 +81,7 @@ chmod +x *.command macos/*.command
 sudo xattr -dr com.apple.quarantine "/Applications/DeepSeek Harness.app"
 ```
 
-> 0.1.3 起安装器会补上 `ElectronAsarIntegrity` 与 entitlements 两步，并已在本机（DSH Desktop 0.2.2-rc.3 / Apple silicon）验证安装与启动。
+> 0.1.3 起安装器会补上 `ElectronAsarIntegrity` 与 entitlements 两步；0.1.4 起还会注册 LaunchAgent 后台自动修复（每 20 秒检查一次）。已在 macOS（DSH Desktop 0.2.2-rc.3 / 0.2.2-rc.5 / Apple silicon）验证安装、启动与自动重打。
 > 任何一步失败时安装器都会停在“已备份、未修改/未写入”的状态，不会把应用写坏；把终端输出发到 issue 即可。
 
 ---
@@ -114,8 +115,14 @@ Windows 路径：`C:\Users\<你>\.dsh\desktop-profiles\`；macOS：`~/.dsh/deskt
 | Windows | **DeepSeek Harness (Profiles)** 快捷方式，或 `Launch-Windows.cmd` |
 | macOS | `launch-macos.command`（可拖到 Dock） |
 
-它们会在启动前检查补丁：**DSH 更新覆盖 `app.asar` 后自动重打**。
-如果某次更新后先打开了官方界面，关掉再用上面入口启动一次即可恢复。
+启动器会在启动前检查补丁；此外系统里还有后台自动修复：
+
+| 系统 | 自动修复 | 日志 |
+|---|---|---|
+| Windows | 启动文件夹 watcher（60 秒） | `%LOCALAPPDATA%\dsh-desktop-profiles\repair.log` |
+| macOS | LaunchAgent `com.dsh.desktop-profiles.repair`（20 秒） | `~/Library/Logs/dsh-desktop-profiles/repair.log` |
+
+DSH 更新覆盖 `app.asar` 后，后台会用新 asar 现场重建补丁并重签；**修复完成后重启一次应用**即可看到 Profile 行。如果新版外壳结构变化导致锚点失效，修复会失败但保持官方界面，不会写坏应用。
 
 ---
 
@@ -190,11 +197,11 @@ dsh-desktop-profiles/
 ├─ install-macos.command / launch-macos.command / uninstall-macos.command
 ├─ windows/
 │  ├─ Install.cmd / Launch.cmd / Repair.cmd / Uninstall.cmd
-│  ├─ installer/      # deploy / revert / patch-check / asar / ps1
-│  └─ payload/        # Windows 预构建补丁（DSH 0.2.2-rc.3）
+│  ├─ installer/      # repair / deploy / revert / asar / ps1 / watcher
 ├─ macos/
 │  ├─ install.command / launch.command / uninstall.command
 │  ├─ installer/      # deploy / revert / asar / macos-sign
+│  ├─ agent/          # 后台自动修复（LaunchAgent）
 │  ├─ src/            # 补丁源码（两个平台共用的 patch 源）
 │  └─ tools/          # build.mjs / asar.mjs
 ├─ plugin/            # DSH bundle 载体（状态检测，可选）

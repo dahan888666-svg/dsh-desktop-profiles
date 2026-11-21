@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.4 — 2026-11-21
+
+### 升级后自动修复（重点）
+
+- **macOS**：安装器默认注册 LaunchAgent `com.dsh.desktop-profiles.repair`，每 20 秒检查一次；DSH 更新覆盖 `app.asar` 后自动用新 asar 重建补丁、同步 `ElectronAsarIntegrity`、ad-hoc 重签并通知。
+- **Windows**：安装器把工具链复制到 `%LOCALAPPDATA%/dsh-desktop-profiles/toolchain`，并在启动文件夹放后台 watcher（60 秒）；`Launch-Windows.cmd` / `Repair-Windows.cmd` 启动前也会现场构建并修复。
+- 两端都改为“用本机 `app.asar` 现场构建补丁”，不再依赖随包预构建的 payload；新 DSH 小版本只要外壳锚点不变即可自动适配。
+- 卸载会先移除后台修复，再恢复官方 `app.asar`，避免卸载后被自动重打。
+
+### 兼容性
+
+- 已验证 DSH Desktop **0.2.2-rc.5**（同一套锚点同样适用于 rc.3）。
+- Windows 安装不再要求 payload 版本匹配；`windows/payload` 已移除（始终现场构建）。
+
+### 其它
+
+- macOS 安装器支持 `--no-quit` / `--no-open` / `--no-agent`（供后台修复与自动化使用）。
+- 版本 0.1.4。
+
 ## 0.1.3 — 2026-11-16
 
 ### macOS 安装器修复

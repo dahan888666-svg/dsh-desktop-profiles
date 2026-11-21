@@ -2,8 +2,8 @@
 
 > 给 DeepSeek Harness 桌面端加**多 Profile**：每个 Profile 拥有独立的 `DSH_HOME`（会话、登录凭据、插件、模型配置、附件），侧边栏一行即可新建/切换；切换在同一窗口完成，**不会中断其它 Profile 正在运行的任务**。
 
-![Version](https://img.shields.io/badge/version-0.1.3-blue)
-![DSH Desktop](https://img.shields.io/badge/DSH%20Desktop-0.2.2--rc.3-informational)
+![Version](https://img.shields.io/badge/version-0.1.4-blue)
+![DSH Desktop](https://img.shields.io/badge/DSH%20Desktop-0.2.2--rc.5-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ![侧边栏 Profile 行](docs/screenshot-row.png)
@@ -26,12 +26,13 @@ DSH 桌面端默认只有一个数据目录：会话、账号、插件、模型�
 | 新建向导 | 点「＋」填名称/显示名，可勾选「复制当前登录凭据」「沿用当前模型设置」 |
 | 删除可恢复 | 删除移入 `.trash`，可手工找回 |
 | 命令行 / 环境变量 | `--profile <name>`、`DSH_DESKTOP_PROFILE` 指定启动 Profile；应用已运行时再次执行会切换现有窗口 |
-| 自愈启动器 | Windows `Launch-Windows.cmd` / macOS `launch-macos.command`：DSH 更新覆盖补丁后自动重打 |
+| 升级自愈 | macOS 后台 LaunchAgent（每 20 秒）、Windows 启动 watcher（每 60 秒）检测更新后自动重打补丁；启动器也会在启动前修复 |
 | 可回滚 | 安装器保留官方 `app.asar.stock`，一键还原；Profile 数据不受影响 |
 
 ## 兼容性
 
-- **DSH Desktop 0.2.2-rc.3**：补丁绑定该版本的 `lib/main.js` SHA-256（`f808749c…`）；版本不符时安装器拒绝执行，不会写坏应用。
+- **DSH Desktop 0.2.2-rc.3 / 0.2.2-rc.5** 已验证：安装器每次都用本机官方 asar 现场构建补丁，不依赖固定哈希。
+- 新版 DSH 只要外壳锚点未变，安装与自动修复即可直接适配；锚点变化时安装器会拒绝并保留官方界面。
 - Windows 10/11。
 - macOS 13+；已在 Apple silicon 真机验证安装、启动与 Profile 切换，签名为 ad-hoc（仅本机可用）。
 - 不修改系统设置、不安装后台服务，只改 DSH 应用自身的 `app.asar`。
@@ -60,7 +61,7 @@ DSH 桌面端默认只有一个数据目录：会话、账号、插件、模型�
 1. 解压后打开「终端」，进入解压目录：
 
    ```bash
-   cd ~/Downloads/dsh-desktop-profiles-0.1.3-all
+   cd ~/Downloads/dsh-desktop-profiles-0.1.4-all
    chmod +x *.command macos/*.command
    ```
 
@@ -155,13 +156,22 @@ Profile 行位于侧边栏「新会话」上方：头像 + 名称 + 状态点 + 
 - **macOS**：`uninstall-macos.command` → 还原官方 `app.asar`、重算 `ElectronAsarIntegrity`、ad-hoc 重签并重启。
 - 两种方式都**不会删除 Profile 数据**（仍在 `desktop-profiles` 下）；想彻底清理，卸载后手动删除该目录。
 
-## DSH 升级后
+## DSH 升级后（自动修复）
 
-官方更新会用新的 `app.asar` 覆盖补丁：
+官方更新会用新的 `app.asar` 覆盖补丁。0.1.4 起两个平台都带**后台自动修复**：
 
-- 通过自愈启动器（Windows `Launch-Windows.cmd` / macOS `launch-macos.command`）启动时，会检测并**自动重打**（补丁与当前 DSH 版本匹配时）；
-- 版本不匹配时保持官方界面并在日志里说明（Windows：`%LOCALAPPDATA%\dsh-desktop-profiles\repair.log`；macOS：终端输出 / 安装器报错）；
-- 适配新版本 DSH：更新 `macos/src/blocks` 与 `tools/build.mjs` 的锚点，重新发布对应版本的补丁。
+- **macOS**：安装器注册 LaunchAgent `com.dsh.desktop-profiles.repair`，每 **20 秒**检查一次。发现补丁丢失时，用新 `app.asar` 现场构建、替换、同步 `ElectronAsarIntegrity`、ad-hoc 重签，并发系统通知。
+- **Windows**：安装器把工具链复制到 `%LOCALAPPDATA%/dsh-desktop-profiles/toolchain`，并在启动文件夹放一个隐藏 watcher，每 **60 秒**检查；`Launch-Windows.cmd` / `Repair-Windows.cmd` 启动前也会先修复。
+
+修复完成后需要**重启一次应用**才能看到 Profile 行（更新重启时应用可能先以官方界面启动，后台随后完成修复）。日志：
+
+- macOS：`~/Library/Logs/dsh-desktop-profiles/repair.log`
+- Windows：`%LOCALAPPDATA%/dsh-desktop-profiles/repair.log`
+
+如果 DSH 新版改了外壳结构导致锚点失效，自动修复会失败并**保持官方界面**（不会写坏应用），日志里会给出原因；此时需要更新 `macos/src/blocks` 与 `build.mjs` 锚点后发布新版。
+
+卸载会先移除后台修复，再恢复官方 `app.asar`，不会出现「刚卸载又被重打」。
+
 
 ## 工作原理
 
@@ -188,11 +198,11 @@ dsh-desktop-profiles/
 ├─ install-macos.command / launch-macos.command / uninstall-macos.command
 ├─ windows/
 │  ├─ Install.cmd / Launch.cmd / Repair.cmd / Uninstall.cmd
-│  ├─ installer/      # deploy / revert / patch-check / asar / ps1
-│  └─ payload/        # Windows 预构建补丁（DSH 0.2.2-rc.3）
+│  ├─ installer/      # repair / deploy / revert / asar / ps1 / watcher
 ├─ macos/
 │  ├─ install.command / launch.command / uninstall.command
 │  ├─ installer/      # deploy / revert / asar / macos-sign
+│  ├─ agent/          # 后台自动修复（LaunchAgent）
 │  ├─ src/            # 补丁源码（两个平台共用）
 │  └─ tools/          # build.mjs / asar.mjs
 ├─ plugin/            # 可选的 DSH bundle 载体（状态检测）
@@ -208,6 +218,7 @@ dsh-desktop-profiles/
 - `macos/installer/revert.mjs`：还原官方 asar，并按同一规则恢复哈希与签名。
 - `macos/installer/asar.mjs`：最小 asar 读写实现；未修改的文件按原始字节复制，重打包不引入额外差异。
 - 版本号：`macos/VERSION` 会被 build.mjs 写进补丁清单（`patchVersion`）。
+- 自动修复：`macos/agent/`（LaunchAgent + `repair.mjs`）与 `windows/installer/repair.mjs`（watcher / 启动器共用），检测补丁丢失后调用同一套 build + deploy。
 
 ## 已知限制
 

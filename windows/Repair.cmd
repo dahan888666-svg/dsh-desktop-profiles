@@ -15,7 +15,7 @@ if not defined INSTALL (
 echo Install target: %INSTALL%
 set "NODE=%INSTALL%\resources\runtime\primary-runtime\dependencies\node\bin\node.exe"
 if not exist "%NODE%" set "NODE=node"
-"%NODE%" "%HERE%installer\patch-check.mjs" "%INSTALL%" --payload "%HERE%payload"
+"%NODE%" "%HERE%installer\repair.mjs" "%INSTALL%" --toolchain "%HERE%.."
 echo.
 echo Repair finished. See %LOCALAPPDATA%\dsh-desktop-profiles\repair.log for details.
 if not defined DSH_PROFILES_NO_PAUSE pause

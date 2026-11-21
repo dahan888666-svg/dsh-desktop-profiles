@@ -25,6 +25,7 @@ chmod +x *.command
    - 替换 `app.asar`，同步 `Info.plist` 的 `ElectronAsarIntegrity` 哈希；
    - 沿用原 bundle 的 hardened runtime 与 entitlements 做 ad-hoc 重签名（只签主 bundle，不 `--deep`）；
    - 执行 `codesign --verify` 校验签名；
+   - 注册 LaunchAgent `com.dsh.desktop-profiles.repair`（每 20 秒检查一次，DSH 更新后自动重打补丁、重签并通知）；
    - 重新打开应用。
 
 4. 打开后，侧边栏“新会话”上方出现 Profile 行。

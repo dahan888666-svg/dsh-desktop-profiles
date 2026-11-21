@@ -28,6 +28,16 @@ if errorlevel 1 (
   exit /b
 )
 del "%TEMP%\dsh-profiles-write-test.bin" >nul 2>&1
+
+rem Stop the background repair watcher before restoring the official archive.
+set "TOOLROOT=%LOCALAPPDATA%\dsh-desktop-profiles"
+if not exist "%TOOLROOT%" mkdir "%TOOLROOT%" >nul 2>&1
+echo stop>"%TOOLROOT%\STOP"
+powershell -NoProfile -Command "Remove-Item (Join-Path ([Environment]::GetFolderPath('Startup')) 'DSH-Desktop-Profiles-Repair.lnk') -Force -ErrorAction SilentlyContinue"
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*repair-loop.vbs*') -or ($_.CommandLine -like '*dsh-desktop-profiles*toolchain*repair.mjs*') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+timeout /t 2 /nobreak >nul
+if exist "%TOOLROOT%\toolchain" rmdir /s /q "%TOOLROOT%\toolchain"
+
 set "NODE=%INSTALL%\resources\runtime\primary-runtime\dependencies\node\bin\node.exe"
 if not exist "%NODE%" set "NODE=node"
 "%NODE%" "%HERE%installer\revert.mjs" "%INSTALL%"
