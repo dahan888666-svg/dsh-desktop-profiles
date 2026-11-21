@@ -89,8 +89,11 @@ async function main() {
   const installDir = detectInstallDir()
   if (installDir === undefined) { log('DeepSeek Harness not found; skipping'); return 0 }
   const state = await inspect(installDir)
+  if (!state.repair) {
+    if (args.includes('--verbose')) log('inspect: ' + state.reason)
+    return 0
+  }
   log('inspect: ' + state.reason)
-  if (!state.repair) return 0
   if (state.info !== undefined && state.info.patched) {
     log('app.asar is already patched but the marker is inconsistent; leaving it untouched')
     return 0

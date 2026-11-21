@@ -106,8 +106,11 @@ function acquireLock() {
 }
 
 const state = inspect()
+if (!state.repair && !args.includes('--force')) {
+  if (args.includes('--verbose')) log('inspect: ' + state.reason)
+  process.exit(0)
+}
 log('inspect: ' + state.reason)
-if (!state.repair && !args.includes('--force')) process.exit(0)
 
 const lock = acquireLock()
 if (lock === undefined) { log('another repair is running; skipping'); process.exit(0) }
